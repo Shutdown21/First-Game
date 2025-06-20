@@ -1,0 +1,125 @@
+[gd_scene load_steps=5 format=3 uid="uid://dfgi2qgqcdy82"]
+
+[ext_resource type="Texture2D" uid="uid://c02gsg1f7ra7j" path="res://addons/2d_shapes/Ellipse.svg" id="1_3qydi"]
+
+[sub_resource type="GDScript" id="GDScript_3qydi"]
+resource_name = "Player"
+script/source = "extends CharacterBody2D
+
+@export var shootSpeed = 1.0
+const bullet = preload(\"res://Player/bullet.tscn\")
+
+@onready var marker = $Shoot/Marker2D
+@onready var shootTimer = $Shoot/ShootSpeedTimer
+
+var SPEED = 300.0
+const JUMP_VELOCITY = -400.0
+const DASH_VELOCITY = 3000.0
+var direction
+var last_direction :=1
+
+var canShoot = true
+
+
+func get_input():
+	if Input.is_action_just_pressed(\"Shoot\"):
+		shoot()
+	elif Input.is_action_just_pressed(\"dash\"):
+		dash()
+
+func _physics_process(delta: float) -> void:
+	get_input()
+	# Add the gravity.
+	if not is_on_floor():
+		velocity += get_gravity() * delta
+
+	# Handle jump.
+	if Input.is_action_just_pressed(\"ui_accept\") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+		
+	direction = Input.get_axis(\"ui_left\", \"ui_right\")
+	
+	if direction != 0:
+		last_direction = direction
+	
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	move_and_slide()
+
+func shoot():
+	if canShoot:
+		canShoot = false
+		shootTimer.start()
+		Game.shoot_cooldown_time = shootTimer.wait_time
+		Game.shoot_cooldown_max = shootTimer.wait_time
+		var mouse_pos = get_global_mouse_position()
+		var shoot_direction = (mouse_pos - marker.global_position).normalized()
+		var b = bullet.instantiate()
+		b.set_player_reference(self)
+		b.global_position = marker.global_position
+		b.set_direction(shoot_direction)
+		get_tree().root.add_child(b)
+
+func _on_shoot_speed_timer_timeout() -> void:
+	canShoot = true
+
+func dash():
+	$DashTimer.start()
+	SPEED = 0
+	velocity.x = last_direction * DASH_VELOCITY
+	move_and_slide()
+	#MAKE A DASH VELOCITY
+
+
+func _on_dash_timer_timeout() -> void:
+	SPEED = 300
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_q3lat"]
+radius = 16.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_l2ndj"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_3qydi")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Player" type="CharacterBody2D"]
+script = SubResource("GDScript_3qydi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_q3lat")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(9.53674e-07, 9.53674e-07)
+scale = Vector2(2.5, 2.5)
+sprite_frames = SubResource("SpriteFrames_l2ndj")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1.8, 1.8)
+limit_left = 0
+limit_right = 1152
+limit_bottom = 480
+
+[node name="DashTimer" type="Timer" parent="."]
+wait_time = 0.3
+
+[node name="Shoot" type="Node2D" parent="."]
+
+[node name="Marker2D" type="Marker2D" parent="Shoot"]
+position = Vector2(16, 0)
+
+[node name="ShootSpeedTimer" type="Timer" parent="Shoot"]
+wait_time = 5.0
+one_shot = true
+
+[connection signal="timeout" from="DashTimer" to="." method="_on_dash_timer_timeout"]
+[connection signal="timeout" from="Shoot/ShootSpeedTimer" to="." method="_on_shoot_speed_timer_timeout"]

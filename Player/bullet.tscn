@@ -1,0 +1,75 @@
+[gd_scene load_steps=4 format=3 uid="uid://duve7qc6uus8h"]
+
+[ext_resource type="Texture2D" uid="uid://cd6ij6ktf3y72" path="res://addons/2d_shapes/Star.svg" id="1_kxw81"]
+
+[sub_resource type="GDScript" id="GDScript_kxw81"]
+script/source = "extends Area2D
+
+enum BulletState { FORWARD, PAUSE, RETURN }
+var state = BulletState.FORWARD
+var player_ref  # Will hold the reference to the player node
+
+var start_position : Vector2
+var end_position : Vector2
+var direction : Vector2
+
+var elapsed_time = 0.0
+
+func _ready():
+	start_position = global_position
+	end_position = start_position + direction.normalized() * 150
+
+func _physics_process(delta):
+	match state:
+		BulletState.FORWARD:
+			elapsed_time += delta
+			var t_raw = clamp(elapsed_time / 0.6, 0.0, 1.0)
+			var t_eased = sin(t_raw * PI * 0.5)
+			global_position = lerp(start_position, end_position, t_eased)
+			if t_raw >= 1:
+				state = BulletState.PAUSE
+				elapsed_time = 0.0
+			
+		BulletState.PAUSE:
+			elapsed_time += delta
+			if elapsed_time >= 0.1:
+				state = BulletState.RETURN
+				elapsed_time = 0.0
+		
+		BulletState.RETURN:
+			elapsed_time += delta
+			var t_raw = clamp(elapsed_time / 0.6, 0.0, 1.0)
+			var t_eased = 1.0 - cos(t_raw * PI * 0.5)
+			global_position = lerp(end_position, player_ref.global_position , t_eased)
+			if t_raw >= 1:
+				queue_free()
+
+func set_player_reference(player):
+	player_ref = player
+
+func _on_area_entered(area: Area2D) -> void:
+	if area.name == \"Hitbox\":
+		queue_free()
+
+func set_direction(bulletDirection):
+	direction = bulletDirection
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.is_in_group(\"Enemies\"):
+		queue_free()
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tqmay"]
+radius = 8.0
+
+[node name="Bullet" type="Area2D"]
+script = SubResource("GDScript_kxw81")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_tqmay")
+
+[node name="Star" type="Sprite2D" parent="."]
+position = Vector2(0, -1)
+texture = ExtResource("1_kxw81")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

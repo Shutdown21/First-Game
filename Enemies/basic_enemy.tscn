@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3 uid="uid://c4awdhw55o74q"]
+
+[ext_resource type="Texture2D" uid="uid://dairor2a0kwo4" path="res://addons/2d_shapes/Polygon.svg" id="1_221se"]
+
+[sub_resource type="GDScript" id="GDScript_221se"]
+resource_name = "Basic Enemy"
+script/source = "class_name Enemy
+extends CharacterBody2D
+
+var SPEED = 50
+var player
+var chase = false
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _physics_process(delta: float) -> void:
+	velocity += get_gravity() * delta
+	if chase == true:
+		var direction = (player.position - self.position).normalized()
+		if direction.x >0:
+			velocity.x = direction.x * SPEED
+		else:
+			velocity.x = direction.x * SPEED
+	else:
+		velocity.x = 0
+	move_and_slide()
+
+func _on_player_detection_body_entered(body):
+	if body.name == \"Player\":
+		player = body
+		chase = true
+
+func _on_player_detection_body_exited(body: Node2D) -> void:
+	if body.name == \"Player\":
+		chase = false
+
+func _on_area_2d_area_entered(area: Area2D) -> void:
+	if area.name == \"Bullet\":
+		queue_free()
+
+func _on_hitbox_body_entered(body: Node2D) -> void:
+	if body.name == \"Player\":
+		queue_free()
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dvx36"]
+size = Vector2(32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_gie15"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_221se")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_221se"]
+radius = 120.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_221se"]
+size = Vector2(32, 32)
+
+[node name="Basic Enemy" type="CharacterBody2D"]
+script = SubResource("GDScript_221se")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(8, -8)
+shape = SubResource("RectangleShape2D_dvx36")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(8, -8)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_gie15")
+
+[node name="Player Detection" type="Area2D" parent="."]
+
+[node name="Detection" type="CollisionShape2D" parent="Player Detection"]
+position = Vector2(8, -8)
+shape = SubResource("CircleShape2D_221se")
+
+[node name="Hitbox" type="Area2D" parent="."]
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(8, -8)
+shape = SubResource("RectangleShape2D_221se")
+
+[connection signal="body_entered" from="Player Detection" to="." method="_on_player_detection_body_entered"]
+[connection signal="body_exited" from="Player Detection" to="." method="_on_player_detection_body_exited"]
+[connection signal="area_entered" from="Hitbox" to="." method="_on_area_2d_area_entered"]
+[connection signal="body_entered" from="Hitbox" to="." method="_on_hitbox_body_entered"]

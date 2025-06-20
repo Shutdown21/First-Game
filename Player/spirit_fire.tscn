@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://b5kvpuh32w64g"]
+
+[ext_resource type="Texture2D" uid="uid://b7tl54687imyc" path="res://addons/2d_shapes/Triangle.svg" id="1_g8o6i"]
+[ext_resource type="Script" uid="uid://dj2tjhoslpqju" path="res://Player/spirit_fire.gd" id="1_r0en6"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_r0en6"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ujxgu"]
+radius = 218.057
+
+[node name="SpiritFire" type="Area2D"]
+script = ExtResource("1_r0en6")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("CircleShape2D_r0en6")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_g8o6i")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+position = Vector2(0, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_ujxgu")
+
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]

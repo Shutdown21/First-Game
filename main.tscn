@@ -1,0 +1,77 @@
+[gd_scene load_steps=7 format=3 uid="uid://3lnpgvyilrrv"]
+
+[ext_resource type="PackedScene" uid="uid://dfgi2qgqcdy82" path="res://Player/Player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://c4awdhw55o74q" path="res://Enemies/basic_enemy.tscn" id="2_0xm2m"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7dm0k"]
+size = Vector2(1152, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ig7tw"]
+size = Vector2(64, 416)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0xm2m"]
+size = Vector2(64, 416)
+
+[sub_resource type="GDScript" id="GDScript_0xm2m"]
+script/source = "extends Label
+
+func _ready():
+	pass
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	if Game.shoot_cooldown_time > 0:
+		Game.shoot_cooldown_time = max(0, Game.shoot_cooldown_time - delta)
+		text = \"Bullet Cooldown: \" + str(int(Game.shoot_cooldown_time + 1)) + \"s\"
+	else:
+		text = \"Bullet Cooldown: Ready\"
+"
+
+[node name="World" type="Node2D"]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(576, 464)
+shape = SubResource("RectangleShape2D_7dm0k")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(1120, 272)
+shape = SubResource("RectangleShape2D_ig7tw")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(32, 272)
+shape = SubResource("RectangleShape2D_0xm2m")
+
+[node name="Panel" type="Panel" parent="."]
+offset_top = 448.0
+offset_right = 1152.0
+offset_bottom = 480.0
+
+[node name="Panel2" type="Panel" parent="."]
+offset_top = 64.0
+offset_right = 64.0
+offset_bottom = 448.0
+
+[node name="Panel3" type="Panel" parent="."]
+offset_left = 1088.0
+offset_top = 64.0
+offset_right = 1152.0
+offset_bottom = 448.0
+
+[node name="Player" parent="." instance=ExtResource("1_ig7tw")]
+position = Vector2(336, 264)
+
+[node name="Basic Enemy" parent="." instance=ExtResource("2_0xm2m")]
+position = Vector2(584, 360)
+
+[node name="Cooldowns" type="CanvasLayer" parent="."]
+
+[node name="Bullet" type="Label" parent="Cooldowns"]
+offset_left = 8.0
+offset_top = 16.0
+offset_right = 48.0
+offset_bottom = 39.0
+theme_override_font_sizes/font_size = 22
+text = "Bullet"
+script = SubResource("GDScript_0xm2m")
