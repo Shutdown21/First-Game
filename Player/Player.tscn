@@ -11,7 +11,9 @@ const bullet = preload(\"res://Player/bullet.tscn\")
 const spirit_fire = preload(\"res://Player/spirit_fire.tscn\")
 
 @onready var marker = $Shoot/Marker2D
-@onready var a2marker = $Ability2/Marker2D
+@onready var a2s1 = $Ability2/Spawn1
+@onready var a2s2 = $Ability2/Spawn2
+@onready var a2s3 = $Ability2/Spawn3
 @onready var shootTimer = $Shoot/ShootSpeedTimer
 @onready var a2cd = $Ability2/Cooldown
 
@@ -137,9 +139,27 @@ func ability2():
 		a2cd.start()
 		Game.a2_cooldown_time = a2cd.wait_time
 		Game.a2_cooldown_max = a2cd.wait_time
-		var sf = spirit_fire.instantiate()
-		sf.global_position = a2marker.global_position
-		get_tree().root.add_child(sf)
+		
+		var sf1 = spirit_fire.instantiate()
+		sf1.global_position = a2s1.global_position
+		sf1.hover_offset = Vector2(0, -32)
+		sf1.player = self
+		get_tree().root.add_child(sf1)
+		
+		var sf2 = spirit_fire.instantiate()
+		sf2.global_position = a2s2.global_position
+		sf2.hover_offset = Vector2(32, 0)
+		sf2.player = self
+		get_tree().root.add_child(sf2)
+		
+		var sf3 = spirit_fire.instantiate()
+		sf3.global_position = a2s3.global_position
+		sf3.hover_offset = Vector2(-32, 0)
+		sf3.player = self
+		get_tree().root.add_child(sf3)
+
+func _on_cooldown_timeout() -> void:
+	A2 = true
 "
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_q3lat"]
@@ -189,10 +209,18 @@ one_shot = true
 [node name="Ability2" type="Node2D" parent="."]
 
 [node name="Cooldown" type="Timer" parent="Ability2"]
+wait_time = 5.0
 
-[node name="Marker2D" type="Marker2D" parent="Ability2"]
+[node name="Spawn1" type="Marker2D" parent="Ability2"]
 position = Vector2(0, -32)
+
+[node name="Spawn2" type="Marker2D" parent="Ability2"]
+position = Vector2(32, 0)
+
+[node name="Spawn3" type="Marker2D" parent="Ability2"]
+position = Vector2(-32, 0)
 
 [connection signal="timeout" from="DashTimer" to="." method="_on_dash_timer_timeout"]
 [connection signal="timeout" from="DashTimer2" to="." method="_on_dash_timer_2_timeout"]
 [connection signal="timeout" from="Shoot/ShootSpeedTimer" to="." method="_on_shoot_speed_timer_timeout"]
+[connection signal="timeout" from="Ability2/Cooldown" to="." method="_on_cooldown_timeout"]

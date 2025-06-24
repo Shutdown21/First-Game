@@ -40,6 +40,8 @@ func _on_player_detection_body_exited(body: Node2D) -> void:
 func _on_area_2d_area_entered(area: Area2D) -> void:
 	if area.name == \"Bullet\":
 		queue_free()
+	if area.is_in_group(\"SpiritFire\"):
+		queue_free()
 
 func _on_hitbox_body_entered(body: Node2D) -> void:
 	if body.name == \"Player\":
@@ -66,7 +68,9 @@ radius = 120.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_221se"]
 size = Vector2(32, 32)
 
-[node name="Basic Enemy" type="CharacterBody2D"]
+[node name="Basic Enemy" type="CharacterBody2D" groups=["Enemies"]]
+position = Vector2(-8, 8)
+collision_layer = 2
 script = SubResource("GDScript_221se")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -77,18 +81,21 @@ shape = SubResource("RectangleShape2D_dvx36")
 position = Vector2(8, -8)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_gie15")
+metadata/_edit_lock_ = true
 
 [node name="Player Detection" type="Area2D" parent="."]
 
 [node name="Detection" type="CollisionShape2D" parent="Player Detection"]
 position = Vector2(8, -8)
 shape = SubResource("CircleShape2D_221se")
+metadata/_edit_lock_ = true
 
 [node name="Hitbox" type="Area2D" parent="."]
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Hitbox"]
 position = Vector2(8, -8)
 shape = SubResource("RectangleShape2D_221se")
+metadata/_edit_lock_ = true
 
 [connection signal="body_entered" from="Player Detection" to="." method="_on_player_detection_body_entered"]
 [connection signal="body_exited" from="Player Detection" to="." method="_on_player_detection_body_exited"]
