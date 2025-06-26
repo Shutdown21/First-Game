@@ -9,6 +9,7 @@ script/source = "extends CharacterBody2D
 @export var shootSpeed = 1.0
 const bullet = preload(\"res://Player/bullet.tscn\")
 const spirit_fire = preload(\"res://Player/spirit_fire.tscn\")
+const spirit_fire_ult = preload(\"res://Player/spirit_fire_ult.tscn\")
 
 @onready var marker = $Shoot/Marker2D
 @onready var a2s1 = $Ability2/Spawn1
@@ -16,6 +17,17 @@ const spirit_fire = preload(\"res://Player/spirit_fire.tscn\")
 @onready var a2s3 = $Ability2/Spawn3
 @onready var shootTimer = $Shoot/ShootSpeedTimer
 @onready var a2cd = $Ability2/Cooldown
+
+@onready var Us1 = $Ultimate/Spawn1
+@onready var Us2 = $Ultimate/Spawn2
+@onready var Us3 = $Ultimate/Spawn3
+@onready var Us4 = $Ultimate/Spawn4
+@onready var Us5 = $Ultimate/Spawn5
+@onready var Us6 = $Ultimate/Spawn6
+@onready var Us7 = $Ultimate/Spawn7
+@onready var Us8 = $Ultimate/Spawn8
+@onready var Us9 = $Ultimate/Spawn9
+@onready var Ucd = $Ultimate/Cooldown
 
 var SPEED = 300.0
 const JUMP_VELOCITY = -400.0
@@ -34,38 +46,49 @@ var DASH_FADE_TIME := 0.2
 var DASH_END_SPEED := 300.0
 var FRICTION := 1000.0
 
+var is_hovering := false
+var original_y := 0.0
+const HOVER_HEIGHT := 120.0
+const HOVER_DURATION := 2.0
+@onready var tween := create_tween()  # Create dynamically
+
+
 var canShoot = true
 var A2 = true #second ability can be used if true
+var ult = true
 
 func _ready():
 	$DashTimer.one_shot = true
 	$DashTimer.wait_time = DASH_DURATION
 	$DashTimer.connect(\"timeout\", Callable(self, \"_on_DashTimer_timeout\"))
+	original_y = global_position.y
 
 func get_input():
 	if Input.is_action_just_pressed(\"Shoot\"):
 		shoot()
 	if Input.is_action_just_pressed(\"Spirit Fire\"):
 		ability2()
+	if Input.is_action_just_pressed(\"Ultimate\"):
+		ultimate()
 
 func _physics_process(delta: float) -> void:
 	if not is_dashing and not is_dash_fading:
 		get_input()
 
 		# Gravity
-		if not is_on_floor():
+		if not is_on_floor() and not is_hovering:
 			velocity.y += get_gravity().y * delta
-
+			
 		# Jump
 		if Input.is_action_just_pressed(\"ui_accept\") and is_on_floor():
 			velocity.y = JUMP_VELOCITY
-
+			
 		# Horizontal movement input
 		@warning_ignore(\"narrowing_conversion\")
 		direction = Input.get_axis(\"ui_left\", \"ui_right\")
 		if direction != 0:
 			last_direction = direction
-
+			
 		# Dash trigger
 		if Input.is_action_just_pressed(\"dash\"):
 			is_dashing = true
@@ -76,6 +99,11 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.x = direction * SPEED if direction != 0 else move_toward(velocity.x, 0, FRICTION * delta)
 			move_and_slide()
+			
+		if is_hovering:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			return
 	
 	elif is_dashing:
 		# Interpolate to target dash position over duration
@@ -160,6 +188,49 @@ func ability2():
 
 func _on_cooldown_timeout() -> void:
 	A2 = true
+
+
+func ultimate():
+	if not ult:
+		return
+
+	ult = false
+	Ucd.start()
+	Game.ult_cooldown_time = Ucd.wait_time
+	Game.ult_cooldown_max = Ucd.wait_time
+
+	# Hover effect
+	original_y = global_position.y
+	var hover_y = original_y - HOVER_HEIGHT
+
+	is_hovering = true
+	tween.kill()  # Clean up any ongoing tweens
+	tween = create_tween()
+	tween.tween_property(self, \"global_position:y\", hover_y, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(Callable(self, \"_spawn_ultimate_projectiles\"))
+	tween.tween_interval(HOVER_DURATION)
+	tween.tween_property(self, \"global_position:y\", original_y, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_callback(Callable(self, \"_on_hover_end\"))
+
+func _on_ult_cooldown_timeout() -> void:
+	ult = true
+	
+func _spawn_ultimate_projectiles():
+	var projectiles = [
+		[Us1, Vector2(0, -56)], [Us2, Vector2(24, 48)], [Us3, Vector2(-24, 48)],
+		[Us4, Vector2(48, 24)], [Us5, Vector2(-48, 24)], [Us6, Vector2(56, -8)],
+		[Us7, Vector2(-56, -8)], [Us8, Vector2(40, -40)], [Us9, Vector2(-40, -40)],
+	]
+
+	for data in projectiles:
+		var sf = spirit_fire_ult.instantiate()
+		sf.global_position = data[0].global_position
+		sf.hover_offset = data[1]
+		sf.player = self
+		get_tree().root.add_child(sf)
+	
+func _on_hover_end():
+	is_hovering = false
 "
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_q3lat"]
@@ -207,20 +278,57 @@ wait_time = 5.0
 one_shot = true
 
 [node name="Ability2" type="Node2D" parent="."]
+visible = false
 
 [node name="Cooldown" type="Timer" parent="Ability2"]
 wait_time = 5.0
 
 [node name="Spawn1" type="Marker2D" parent="Ability2"]
 position = Vector2(0, -32)
+metadata/_edit_lock_ = true
 
 [node name="Spawn2" type="Marker2D" parent="Ability2"]
 position = Vector2(32, 0)
+metadata/_edit_lock_ = true
 
 [node name="Spawn3" type="Marker2D" parent="Ability2"]
 position = Vector2(-32, 0)
+metadata/_edit_lock_ = true
+
+[node name="Ultimate" type="Node2D" parent="."]
+
+[node name="Spawn1" type="Marker2D" parent="Ultimate"]
+position = Vector2(0, -56)
+
+[node name="Spawn2" type="Marker2D" parent="Ultimate"]
+position = Vector2(24, 48)
+
+[node name="Spawn3" type="Marker2D" parent="Ultimate"]
+position = Vector2(-24, 48)
+
+[node name="Spawn4" type="Marker2D" parent="Ultimate"]
+position = Vector2(48, 24)
+
+[node name="Spawn5" type="Marker2D" parent="Ultimate"]
+position = Vector2(-48, 24)
+
+[node name="Spawn6" type="Marker2D" parent="Ultimate"]
+position = Vector2(56, -8)
+
+[node name="Spawn7" type="Marker2D" parent="Ultimate"]
+position = Vector2(-56, -8)
+
+[node name="Spawn8" type="Marker2D" parent="Ultimate"]
+position = Vector2(-40, -40)
+
+[node name="Spawn9" type="Marker2D" parent="Ultimate"]
+position = Vector2(40, -40)
+
+[node name="Cooldown" type="Timer" parent="Ultimate"]
+wait_time = 15.0
 
 [connection signal="timeout" from="DashTimer" to="." method="_on_dash_timer_timeout"]
 [connection signal="timeout" from="DashTimer2" to="." method="_on_dash_timer_2_timeout"]
 [connection signal="timeout" from="Shoot/ShootSpeedTimer" to="." method="_on_shoot_speed_timer_timeout"]
 [connection signal="timeout" from="Ability2/Cooldown" to="." method="_on_cooldown_timeout"]
+[connection signal="timeout" from="Ultimate/Cooldown" to="." method="_on_ult_cooldown_timeout"]

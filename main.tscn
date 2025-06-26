@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://3lnpgvyilrrv"]
+[gd_scene load_steps=9 format=3 uid="uid://3lnpgvyilrrv"]
 
 [ext_resource type="PackedScene" uid="uid://dfgi2qgqcdy82" path="res://Player/Player.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://c4awdhw55o74q" path="res://Enemies/basic_enemy.tscn" id="2_0xm2m"]
 [ext_resource type="Script" uid="uid://fs2n5wyyl7dh" path="res://ability_2.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://ciuuevoo1x0r5" path="res://ultimate.gd" id="4_1bvp3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7dm0k"]
 size = Vector2(1152, 32)
@@ -86,3 +87,12 @@ offset_bottom = 79.0
 theme_override_font_sizes/font_size = 22
 text = "Ability 2"
 script = ExtResource("3_h2yge")
+
+[node name="Ultimate" type="Label" parent="Cooldowns"]
+offset_left = 8.0
+offset_top = 80.0
+offset_right = 93.0
+offset_bottom = 111.0
+theme_override_font_sizes/font_size = 22
+text = "Ultimate"
+script = ExtResource("4_1bvp3")

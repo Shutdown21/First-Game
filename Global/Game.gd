@@ -7,3 +7,7 @@ var can_shoot = true
 var a2_cooldown_time = 0.0
 var a2_cooldown_max = 5.0  # max cooldown duration
 var A2CD = true
+
+var ult_cooldown_time = 0.0
+var ult_cooldown_max = 5.0  # max cooldown duration
+var Ucd = true

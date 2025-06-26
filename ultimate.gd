@@ -6,8 +6,8 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if Game.a2_cooldown_time > 0:
-		Game.a2_cooldown_time = max(0, Game.a2_cooldown_time - delta)
-		text = "Abilty Cooldown: " + str(int(Game.a2_cooldown_time + 1)) + "s"
+	if Game.ult_cooldown_time > 0:
+		Game.ult_cooldown_time = max(0, Game.ult_cooldown_time - delta)
+		text = "Ultimate Cooldown: " + str(int(Game.ult_cooldown_time + 1)) + "s"
 	else:
-		text = "Abilty Cooldown: Ready"
+		text = "Ultimate Cooldown: Ready"

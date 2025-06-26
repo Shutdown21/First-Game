@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://f0dv5jn2beid"]
+
+[ext_resource type="Script" uid="uid://dj2tjhoslpqju" path="res://Player/spirit_fire.gd" id="1_m6rea"]
+[ext_resource type="Texture2D" uid="uid://b7tl54687imyc" path="res://addons/2d_shapes/Triangle.svg" id="2_vyveg"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_r0en6"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ujxgu"]
+radius = 476.004
+
+[node name="SpiritFire" type="Area2D" groups=["SpiritFire"]]
+script = ExtResource("1_m6rea")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("CircleShape2D_r0en6")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_vyveg")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+position = Vector2(0, 2)
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_ujxgu")
+
+[node name="Life" type="Timer" parent="."]
+wait_time = 3.0
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
+[connection signal="timeout" from="Life" to="." method="_on_life_timeout"]
